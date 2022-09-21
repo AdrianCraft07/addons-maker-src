@@ -1,0 +1,21 @@
+{
+  "name": "@agacraft/addons-maker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@agacraft/classes": "^1.1.2",
+    "@agacraft/functions": "1.1.0",
+    "@agacraft/http": "^2.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.16"
+  }
+}
