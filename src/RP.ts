@@ -112,6 +112,20 @@ class Item {
       textures: `textures/items/${Item.name}`,
     };
     let texture = `https://raw.githubusercontent.com/AdrianCraft07/images/main/${config.type}.png`;
+
+    if (
+      config.type == 'helmet' ||
+      config.type == 'chestplate' ||
+      config.type == 'leggings' ||
+      config.type == 'boots'
+    ) {
+      this.#files.push([
+        `textures/models/armor/${Item.name}`,
+        { toFile(path, rpath) {
+          new Json(attachables(Item.name, path, config.type as armor)).toFile(`attachables/${Item.name}`);
+        } },
+      ]);
+    }
     this.#files.push([
       `textures/blocks/${Item.name}`,
       {

@@ -4,64 +4,29 @@ import getClass from '@agacraft/functions/getClass';
 
 import Addon from '.';
 
+import * as types from './types';
+
 interface component {
-  block: {
-    destroy_time: number;
-  };
-  item: {
-    stck_size: number;
-  };
-  entity: {
-    max_health: number;
-  };
+  block: types.ComponentsBlock;
+  item: types.ComponentsItem;
+  entity: types.ComponentsEntity;
 }
-type ObjJson = {
-  block: {
-    'minecraft:block': {
-      description: {
-        identifier: string;
-      };
-      components: component['block'];
-    };
-  };
-  item: {
-    'minecraft:item': {
-      description: {
-        identifier: string;
-      };
-      components: component['item'];
-    };
-  };
-  entity: {
-    'minecraft:entity': {
-      description: {
-        identifier: string;
-      };
-      components: component['entity'];
-    };
-  };
-};
-class BPJson<T extends keyof component> {
+
+class BPJson<T extends keyof types.json> {
   #type;
   bp: BP = null as unknown as BP;
   json;
   name: any;
   constructor(bp: BP, public type: T) {
-    this.json = new Json({
-      format_version: '1.19.0',
-      [`minecraft:${type}`]: {
-        description: { identifier: '' },
-        components: {},
-      },
-    });
+    this.json = new Json(types.json.block);
     this.bp = bp;
     this.bp.setFile(this as unknown as Files);
 
     this.type = type;
     this.#type = type === 'entity' ? 'entities' : type + 's';
   }
-  toObject(): ObjJson[T] {
-    return this.json.toObject() as unknown as ObjJson[T];
+  toObject(): types.json[T] {
+    return this.json.toObject() as unknown as types.json[T];
   }
   copy(bp: BP): Files {
     let File = getClass(this);
@@ -77,7 +42,7 @@ class BPJson<T extends keyof component> {
     )}:${this.name.replaceAll(' ', '_')}`
   }
   toFile(): void {
-    (this.toObject() as ObjJson['block'])[
+    (this.toObject() as types.json['block'])[
       `minecraft:${this.type as 'block'}`
     ].description.identifier = this.getID();
     this.json.toFile(`./${this.bp.addon.name}/BP/${this.#type}/${this.name}`);
