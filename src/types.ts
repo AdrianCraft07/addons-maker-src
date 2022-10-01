@@ -176,7 +176,7 @@ export interface ComponentsItem {
       | 'slot.saddle'
       | 'slot.armor'
       | 'slot.chest'
-      | 'slot.equippab';
+      | 'slot.equippable';
   };
 }
 export interface Events {

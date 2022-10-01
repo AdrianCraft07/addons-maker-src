@@ -122,12 +122,12 @@ class Item {
       this.#files.push([
         `textures/models/armor/${Item.name}`,
         { toFile(path, rpath) {
-          new Json(attachables(Item.name, path, config.type as armor)).toFile(`attachables/${Item.name}`);
+          new Json(attachables(Item.name, path, config.type as armor)).toFile(`${rpath}/attachables/${Item.name}`);
         } },
       ]);
     }
     this.#files.push([
-      `textures/blocks/${Item.name}`,
+      `textures/items/${Item.name}`,
       {
         toFile(path, rpath) {
           ImageTexture(config.texture || texture).then(res =>
@@ -139,11 +139,11 @@ class Item {
     return this;
   }
   toFile(): void {
-    this.#json.toFile(`./${this.RP.addon.name}/RP/textures/item_texture`);
+    this.#json.toFile(`./${this.RP.addon.path}/RP/textures/item_texture`);
     this.#files.forEach(([path, data]) => {
       data.toFile(
-        `./${this.RP.addon.name}/RP/${path}`,
-        `./${this.RP.addon.name}/RP`
+        `./${this.RP.addon.path}/RP/${path}`,
+        `./${this.RP.addon.path}/RP`
       );
     });
   }
@@ -170,12 +170,12 @@ class Block {
     this.RP.setFile(this);
   }
   toFile(): void {
-    this.#blocks.toFile(`./${this.RP.addon.name}/RP/blocks`);
-    this.#terrain.toFile(`./${this.RP.addon.name}/RP/textures/terrain_texture`);
+    this.#blocks.toFile(`./${this.RP.addon.path}/RP/blocks`);
+    this.#terrain.toFile(`./${this.RP.addon.path}/RP/textures/terrain_texture`);
     this.#files.forEach(([path, data]) => {
       data.toFile(
-        `./${this.RP.addon.name}/RP/${path}`,
-        `./${this.RP.addon.name}/RP`
+        `./${this.RP.addon.path}/RP/${path}`,
+        `./${this.RP.addon.path}/RP`
       );
     });
   }
@@ -212,7 +212,7 @@ class RP {
       ],
     }) as unknown as Files & { _toFile: (arg: string) => void };
     json._toFile = json.toFile;
-    json.toFile = () => json._toFile(`./${this.addon.name}/RP/manifest`);
+    json.toFile = () => json._toFile(`./${this.addon.path}/RP/manifest`);
 
     return json;
   }

@@ -14,13 +14,13 @@ interface component {
 
 class BPJson<T extends keyof types.json> {
   #type;
-  bp: BP = null as unknown as BP;
+  BP: BP = null as unknown as BP;
   json;
   name: any;
   constructor(bp: BP, public type: T) {
-    this.json = new Json(types.json.block);
-    this.bp = bp;
-    this.bp.setFile(this as unknown as Files);
+    this.json = new Json(types.json[this.type]);
+    this.BP = bp;
+    this.BP.setFile(this as unknown as Files);
 
     this.type = type;
     this.#type = type === 'entity' ? 'entities' : type + 's';
@@ -36,7 +36,7 @@ class BPJson<T extends keyof types.json> {
     return file;
   }
   getID(){
-    return `${this.bp.addon.name.replaceAll(
+    return `${this.BP.addon.name.replaceAll(
       ' ',
       '_'
     )}:${this.name.replaceAll(' ', '_')}`
@@ -45,11 +45,21 @@ class BPJson<T extends keyof types.json> {
     (this.toObject() as types.json['block'])[
       `minecraft:${this.type as 'block'}`
     ].description.identifier = this.getID();
-    this.json.toFile(`./${this.bp.addon.name}/BP/${this.#type}/${this.name}`);
+    this.json.toFile(`./${this.BP.addon.path}/BP/${this.#type}/${this.name}`);
   }
 }
 
+function getArmor(slot:'head' | 'chest' | 'legs' | 'feet'){
+  return {
+    head:'helmet',
+    chest:'chestplate',
+    legs:'leggings',
+    feet:'boots'
+  }[slot]
+}
+
 class Item extends BPJson<'item'> {
+  #Resource:{type?:string} = {};
   constructor(bp: BP, public name: string) {
     super(bp, 'item');
   }
@@ -58,7 +68,16 @@ class Item extends BPJson<'item'> {
     component: component['item'][K]
   ): this {
     this.toObject()['minecraft:item'].components[name] = component;
+    if(name === 'minecraft:wearable'){
+      let slot =(component as component['item']['minecraft:wearable'])?.slot.split('.').endItem() as 'head' | 'chest' | 'legs' | 'feet';
+      if(slot === 'head' || slot === 'chest' || slot === 'legs' || slot === 'feet'){
+        this.#Resource.type = getArmor(slot)
+      }
+    }
     return this;
+  }
+  getResource() {
+    return this.#Resource
   }
 }
 class Block extends BPJson<'block'> {
@@ -119,7 +138,7 @@ class BP {
       ],
     }) as unknown as Files & {_toFile: (arg:string) => void};
     json._toFile = json.toFile;
-    json.toFile = () => json._toFile(`./${this.addon.name}/BP/manifest`);
+    json.toFile = () => json._toFile(`./${this.addon.path}/BP/manifest`);
 
     return json;
   }

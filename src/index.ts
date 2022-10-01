@@ -10,8 +10,10 @@ type Dir = BP | RP;
 export = class Addon {
   #dirs: Dir[] = [];
   #server = http.createServer().listen(port++);
-  constructor(public name: string) {
+  path: string;
+  constructor(public name: string, config: {path: string} = {path: './'}) {
     this.name = name;
+    this.path = `${config.path}/${name}`;
   }
   addDir(dir: Dir): this {
     this.#dirs.push(dir);
