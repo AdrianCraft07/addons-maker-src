@@ -6,7 +6,6 @@ import RP from './RP';
 let port = 3000;
 
 type Dir = BP | RP;
-
 export = class Addon {
   #dirs: Dir[] = [];
   #server = http.createServer().listen(port++);
