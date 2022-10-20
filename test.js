@@ -1,7 +1,7 @@
 const Addon = require('./dist');
 
 const addon1 = new Addon('addon 1', {path: './test'});
-const bp = addon1.BP('null');
+const bp = addon1.BP();
 
 const helmet = bp.Item('minecraft helmet');
 const chestplate = bp.Item('minecraft chestplate');

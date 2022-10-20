@@ -1,5 +1,4 @@
 import http from 'http';
-import getClass from '@agacraft/functions/getClass';
 
 import { BP, createBP } from './BP';
 import { RP, createRP } from './RP';

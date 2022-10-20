@@ -2,11 +2,12 @@
   "name": "@agacraft/addons-maker",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "keywords": [],
   "author": "Agacraft",
   "scripts": {
-    "test": "tsc && node test.js"
+    "test": "tsc && node test.js",
+    "aam": "aam"
   },
   "license": "ISC",
   "dependencies": {
@@ -15,7 +16,6 @@
     "@agacraft/http": "^2.0.2"
   },
   "devDependencies": {
-    "@types/node": "^18.7.16",
-    "typescript": "^4.8.4"
+    "@types/node": "^18.7.16"
   }
 }
