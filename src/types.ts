@@ -73,7 +73,7 @@ export interface ComponentsItem {
     damage_chance: Number;
     max_durability: Number;
   };
-  minecraft_dye_powder?: {
+  'minecraft:dye_powder'?: {
     color:
       | 'black'
       | 'red'
@@ -108,7 +108,7 @@ export interface ComponentsItem {
     duration: Number;
   };
   'minecraft:icon'?: {
-    legacy_id: String;
+    legacy_id?: String;
     texture: String;
   };
   'minecraft:item_storage'?: {
@@ -130,11 +130,11 @@ export interface ComponentsItem {
   'minecraft:record'?: {
     comparator_signal: Number;
     duration: Number;
-    sound_event: sound_event;
+    sound_event?: sound_event;
   };
   'minecraft:render_offsets'?: {
-    main_hand: main_hand;
-    off_hand: off_hand;
+    main_hand?: main_hand;
+    off_hand?: off_hand;
   };
   'minecraft:repairable'?: {
     on_repaired: on_repaired;

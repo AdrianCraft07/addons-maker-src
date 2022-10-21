@@ -39,16 +39,6 @@ type itemConfig = {
   texture?: string;
   type: armor | tool | 'item';
 };
-class RPItem {
-  constructor(public RP: RP) {
-    this.RP = RP;
-  }
-}
-class RPBlock {
-  constructor(public RP: RP) {
-    this.RP = RP;
-  }
-}
 type json = {
   blocks: {
     textures:
@@ -93,25 +83,24 @@ type json = {
   };
 };
 
-class Item {
-  #json : {
+class RPItem {
+  #json: {
     resource_pack_name: 'AgaMaker';
     texture_name: 'atlas.items';
     texture_data: { [key: string]: { textures: string } };
-  }={
+  } = {
     resource_pack_name: 'AgaMaker',
     texture_name: 'atlas.items',
     texture_data: {},
-  } ;
-  #files: [string, Buffer | { toFile(path: string, rpath: string): void }][] =
-    [];
+  };
+  #files: [string, () => Buffer | string][] = [];
   constructor(public RP: RP) {
-    this.RP = RP;
+    this.RP.setFile(['textures/item_texture.json', new Promise(resolve=>resolve(() => this.#json._toString()))]);
   }
-  addItem(Item: typeof BP.Item, config: itemConfig): this {
+  addItem(Item: typeof BP.Item, config: itemConfig = { type: 'axe' }): this {
     let name = Item.name.replaceAll(' ', '_');
-    this.#json.texture_data[Item.name] = {
-      textures: `textures/items/${Item.name}`,
+    this.#json.texture_data[name] = {
+      textures: `textures/items/${name}`,
     };
     let texture = `https://raw.githubusercontent.com/AdrianCraft07/images/main/${config.type}.png`;
 
@@ -122,17 +111,14 @@ class Item {
       config.type == 'boots'
     ) {
       const x = config.type == 'leggings' ? 2 : 1;
-      let path = `textures/models/armor/${name}_${x}.png`
-      this.RP.setFile([`attachables/${name}.json`,()=>
-        attachables(name, path, config.type as armor)._toString()
-      ])
-      ImageTexture(path).then(res =>
-        this.RP.setFile([path, ()=> res])
-      )
+      let path = `textures/models/armor/${name}_${x}.png`;
+      this.RP.setFile([
+        `attachables/${name}.json`,
+        new Promise(resolve=>resolve(() => attachables(name, path, config.type as armor)._toString())),
+      ]);
+      this.RP.setFile([path, ImageTexture(path).then(res => () => res)]);
     }
-    ImageTexture(config.texture || texture).then(res =>
-      this.RP.setFile([`textures/items/${name}`, ()=> res])
-    )
+    this.RP.setFile([`textures/items/${name}.png`, ImageTexture(config.texture || texture).then(res => ()=>res)])
     return this;
   }
 }
@@ -147,7 +133,7 @@ type model = {
   side: boolean;
 };
 
-class Block {
+class RPBlock {
   #blocks: {
     format_version: '1.1.0';
     [key: string]: json['blocks'] | '1.1.0';
@@ -169,11 +155,10 @@ class Block {
   };
   #files: RPFiles[] = [];
   constructor(public RP: RP) {
-    this.RP = RP;
-    this.RP.setFile(['blocks.json', () => this.#blocks._toString()]);
+    this.RP.setFile(['blocks.json', new Promise(resolve=>resolve(() => this.#blocks._toString()))]);
     this.RP.setFile([
       'textures/terrain_texture.json',
-      () => this.#terrain._toString(),
+      new Promise(resolve=>resolve(() => this.#terrain._toString())),
     ]);
   }
   addBlock(
@@ -222,11 +207,13 @@ class Block {
   }
 }
 
-type RPFiles = [string, () => string | Buffer];
+type RPFiles = [string, Promise<()=> string | Buffer>];
 
 class RP {
-  static Item = RPItem as unknown as RPItem;
-  static Block = RPBlock as unknown as RPBlock;
+  static Item = RPItem;
+  static Block = RPBlock;
+  static __Item = {} as RPItem;
+  static __Block = {} as RPBlock;
   path: string;
   name: string;
 
@@ -245,19 +232,33 @@ class RP {
     addon.addDir(this);
     this.setFile([
       'manifest.json',
-      () =>
-        `{ format_version: 2, header: { name: "${
-          this.name
-        }", description: "${description}", uuid: "${uuid()}", version: [1, 0, 0], min_engine_version: [1, 17, 0] }, modules: [ { type: 'data', uuid: "${uuid()}", version: [1, 0, 0] } ] }`,
+      new Promise((resolve)=>resolve(() =>
+      ({
+        format_version: 2,
+        header: {
+          name: this.name,
+          description,
+          uuid: uuid(),
+          version: [1, 0, 0],
+          min_engine_version: [1, 17, 0],
+        },
+        modules: [
+          { type: 'resources', uuid: uuid(), version: [1, 0, 0] },
+        ],
+      }._toString()))),
     ]);
+  }
+  Item() {
+    return new RPItem(this);
+  }
+  Block() {
+    return new RPBlock(this);
   }
   setFile(file: RPFiles): this {
     this.#files.push([
       `${this.path}/${
         // Se valida que no sean iguales para no causar conflictos con el BP
-        this.addon.onlypath
-          ? `${this.path}/RP/${this.name}`
-          : `${this.path}/${this.name}`
+        this.addon.onlypath ? `RP/${this.name}` : `${this.name}`
       }/${file[0]}`,
       file[1],
     ]);

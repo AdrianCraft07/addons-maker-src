@@ -1,9 +1,17 @@
 const Addon = require('./dist');
 
-console.log(Addon)
+const addon = new Addon('addon', { path: 'test' });
 
-const addon = new Addon('Hello World', {path: 'test'});
+const BP = addon.BP();
 
-const bp = addon.BP({description: 'Hello World'});
+const tool = BP.Item('super coal');
+
+tool.component('minecraft:fuel', { duration: 1000 });
+
+const RP = addon.RP();
+
+const Items = RP.Item();
+
+Items.addItem(tool);
 
 Addon.build(addon);

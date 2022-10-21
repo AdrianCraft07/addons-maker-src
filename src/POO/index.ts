@@ -40,12 +40,12 @@ class Addon {
     return this.#dirs;
   }
   static build(addon: Addon): void {
-    const files: [string, () => string | Buffer][] = [];
+    const files: [string, Promise<() => string | Buffer>][] = [];
     addon.dirs.forEach(dir => {
       files.push(...dir._files);
     });
-    files.forEach(([path, content]) => {
-      file(path, content());
+    files.forEach(async ([path, content]) => {
+      file(path, (await content)());
     });
   }
 }
