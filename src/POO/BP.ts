@@ -19,18 +19,17 @@ class BPJson<T extends keyof types.json> {
   name: any;
   #Resource: { type?: string } = {};
   constructor(bp: BP, public type: T) {
-    this.json = new Json(types.json[this.type]);
-    this.BP = bp;
-    this.BP.setFile(this as unknown as Files);
-
     this.type = type;
     this.#Resource.type = type;
     this.#type = type === 'entity' ? 'entities' : type + 's';
+    this.json = new Json(types.json[this.type]);
+    this.BP = bp;
+    this.BP.setFile([`${this.#type}/${this.name}`, () => this.json.toString()]);
   }
   toObject(): types.json[T] {
     return this.json.toObject() as unknown as types.json[T];
   }
-  copy(bp: BP): Files {
+  copy(bp: BP): BPFiles {
     let File = getClass(this);
     let file = new File(bp, this.type);
     file.name = this.name;
@@ -43,22 +42,12 @@ class BPJson<T extends keyof types.json> {
       '_'
     )}`;
   }
-  toFile(): void {
-    (this.toObject() as types.json['block'])[
-      `minecraft:${this.type as 'block'}`
-    ].description.identifier = this.getID();
-    this.json.toFile(
-      `${this.BP.path}/${
-        // Se valida que no sean iguales para no causar conflictos con el RP
-        this.BP.addon.path !== this.BP.path
-          ? `${this.BP.path}/${this.BP.name}`
-          : `${this.BP.path}/BP/${this.BP.name}`
-      }/${this.#type}/${this.name}`
-    );
-  }
   setResource(property: 'type', value: string): this {
     this.#Resource[property] = value;
     return this;
+  }
+  get Resource() {
+    return this.#Resource;
   }
 }
 
@@ -71,7 +60,7 @@ function getArmor(slot: 'head' | 'chest' | 'legs' | 'feet') {
   }[slot];
 }
 
-class Item extends BPJson<'item'> {
+class BPItem extends BPJson<'item'> {
   constructor(bp: BP, public name: string) {
     super(bp, 'item');
   }
@@ -95,7 +84,7 @@ class Item extends BPJson<'item'> {
     return this;
   }
 }
-class Block extends BPJson<'block'> {
+class BPBlock extends BPJson<'block'> {
   constructor(bp: BP, public name: string) {
     super(bp, 'block');
   }
@@ -108,15 +97,17 @@ class Block extends BPJson<'block'> {
   }
 }
 
-type Files = [string, () => string | Buffer];
+type BPFiles = [string, () => string | Buffer];
 
 class BP {
-  static Item = Item as unknown as Item;
-  static Block = Block as unknown as Block;
+  static Block = BPBlock;
+  static Item = BPItem;
+  static __Block = {} as BPBlock;
+  static __Item = {} as BPItem;
   path: string;
   name: string;
 
-  #files: Files[] = [];
+  #files: BPFiles[] = [];
   constructor(
     public addon: Addon,
     {
@@ -129,7 +120,7 @@ class BP {
     this.name = name || 'My BP';
     description ||= 'By Aga Addons-Maker \n@agacraft/addons-maker in npm';
     addon.addDir(this);
-    this.#files.push([
+    this.setFile([
       'manifest.json',
       () =>
         `{ format_version: 2, header: { name: "${
@@ -137,12 +128,20 @@ class BP {
         }", description: "${description}", uuid: "${uuid()}", version: [1, 0, 0], min_engine_version: [1, 17, 0] }, modules: [ { type: 'data', uuid: "${uuid()}", version: [1, 0, 0] } ] }`,
     ]);
   }
-  setFile(file: Files): this {
-    this.#files.push(file);
+  setFile(file: BPFiles): this {
+    this.#files.push([
+      `${this.path}/${
+        // Se valida que no sean iguales para no causar conflictos con el RP
+        this.addon.onlypath
+          ? `${this.path}/BP/${this.name}`
+          : `${this.path}/${this.name}`
+      }/${file[0]}`,
+      file[1],
+    ]);
     return this;
   }
 
-  get _files(): Files[] {
+  get _files(): BPFiles[] {
     return this.#files;
   }
 }
