@@ -1,8 +1,9 @@
-import Addon from '.';
 import BP from './BP';
 import uuid from '@agacraft/functions/uuid';
 import HTTPRequest from '@agacraft/http/request';
 import fs from 'fs';
+
+import Addon from '.';
 
 const attachables = (id: string, path: string, type: armor) => ({
   format_version: '1.8.0',
@@ -97,7 +98,7 @@ class RPItem {
   constructor(public RP: RP) {
     this.RP.setFile(['textures/item_texture.json', new Promise(resolve=>resolve(() => this.#json._toString()))]);
   }
-  addItem(Item: typeof BP.Item, config: itemConfig = { type: 'axe' }): this {
+  add(Item: typeof BP.Item, config: itemConfig = { type: 'axe' }): this {
     let name = Item.name.replaceAll(' ', '_');
     this.#json.texture_data[name] = {
       textures: `textures/items/${name}`,
@@ -161,19 +162,24 @@ class RPBlock {
       new Promise(resolve=>resolve(() => this.#terrain._toString())),
     ]);
   }
-  addBlock(
+  add(
     Block: typeof BP.__Block,
     config: {
       textures?: model;
       isotropic?: model;
       sound?: json['blocks']['sound'];
-    }
+    }={}
   ): this {
     let name = Block.name.replaceAll(' ', '_');
     let data: json['blocks'] = {
       textures: name,
       sound: config.sound || 'stone',
     };
+    let image = (name:string) =>{
+      let path = `textures/blocks/${name}`;
+      this.RP.setFile([path+'.png', ImageTexture(`https://raw.githubusercontent.com/AdrianCraft07/images/main/block.png`).then(res => () => res)]);
+      return `textures/blocks/${name}`
+    }
     if (config.textures) {
       data.textures = {
         up: config.textures.up ? `${name}_up` : name,
@@ -187,9 +193,13 @@ class RPBlock {
       ['up', 'down', 'north', 'south', 'west', 'east', 'side'].forEach(key => {
         let value = (data.textures as { [key: string]: string })[key];
         this.#terrain.texture_data[value] = {
-          textures: value,
+          textures: image(value),
         };
       });
+    }else{
+      this.#terrain.texture_data[data.textures as string] = {
+        textures: image(data.textures as string),
+      };
     }
     if (config.isotropic) {
       data.isotropic = {
@@ -221,13 +231,12 @@ class RP {
   constructor(
     public addon: Addon,
     {
-      path,
       name,
       description,
-    }: { path?: string; name?: string; description?: string }
+    }: { name?: string; description?: string } = {}
   ) {
-    this.path = path || './';
-    this.name = name || 'My BP';
+    this.path = addon.path.RP;
+    this.name = name || 'My RP';
     description ||= 'By Aga Addons-Maker \n@agacraft/addons-maker in npm';
     addon.addDir(this);
     this.setFile([
@@ -258,7 +267,7 @@ class RP {
     this.#files.push([
       `${this.path}/${
         // Se valida que no sean iguales para no causar conflictos con el BP
-        this.addon.onlypath ? `RP/${this.name}` : `${this.name}`
+        this.addon.onlypath ? `${this.name}/RP` : `${this.name}`
       }/${file[0]}`,
       file[1],
     ]);

@@ -1,17 +1,17 @@
 const Addon = require('./dist');
 
-const addon = new Addon('addon', { path: 'test' });
-
-const BP = addon.BP();
-
-const tool = BP.Item('super coal');
-
-tool.component('minecraft:fuel', { duration: 1000 });
-
-const RP = addon.RP();
+const addon = new Addon('Addon', { path: 'test' });
+const BP = new Addon.BP(addon, { name: 'My Custom BP' });
+const RP = new Addon.RP(addon, { name: 'My Custom RP', description: 'My RP' });
 
 const Items = RP.Item();
+const item = BP.Item('My item');
+Items.add(item);
 
-Items.addItem(tool);
+const Blocks = RP.Block();
+const block = BP.Block('My block');
+Blocks.add(block, { sound: 'metal' });
 
 Addon.build(addon);
+
+Addon.compress(addon);

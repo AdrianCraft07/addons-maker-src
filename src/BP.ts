@@ -4,7 +4,7 @@ import '@agacraft/extension/Object';
 
 import Addon from '.';
 
-import * as types from '../types';
+import * as types from './types';
 
 interface component {
   block: types.ComponentsBlock;
@@ -12,16 +12,18 @@ interface component {
   entity: types.ComponentsEntity;
 }
 
+const copy = (obj: any) => JSON.parse(JSON.stringify(obj));
+
 class BPJson<T extends keyof types.json> {
   #type;
   BP: BP = null as unknown as BP;
   json;
   #Resource: { type?: string } = {};
-  constructor(bp: BP, public type: T, public name: string) {
+  constructor(bp: BP, public type: T, public name: string, public data: number = 0) {
     this.type = type;
     this.#Resource.type = type;
     this.#type = type === 'entity' ? 'entities' : type + 's';
-    this.json = types.json[this.type];
+    this.json = copy(types.json[this.type])
     this.BP = bp;
     this.BP.setFile([
       `${this.#type}/${this.name}.json`,
@@ -40,6 +42,9 @@ class BPJson<T extends keyof types.json> {
     file.name = this.name;
     file.json = this.json;
     return file;
+  }
+  getData() {
+    return this.data;
   }
   getID() {
     return `${this.BP.name.replaceAll(' ', '_')}:${this.name.replaceAll(
@@ -117,12 +122,11 @@ class BP {
   constructor(
     public addon: Addon,
     {
-      path,
       name,
       description,
-    }: { path?: string; name?: string; description?: string }
+    }: { name?: string; description?: string } = {}
   ) {
-    this.path = path || './';
+    this.path = addon.path.BP;
     this.name = name || 'My BP';
     description ||= 'By Aga Addons-Maker \n@agacraft/addons-maker in npm';
     addon.addDir(this);
@@ -155,7 +159,7 @@ class BP {
     this.#files.push([
       `${this.path}/${
         // Se valida que no sean iguales para no causar conflictos con el RP
-        this.addon.onlypath ? `BP/${this.name}` : `${this.name}`
+        this.addon.onlypath ? `${this.name}/BP` : `${this.name}`
       }/${file[0]}`,
       file[1],
     ]);
